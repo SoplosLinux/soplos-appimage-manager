@@ -1,0 +1,118 @@
+# Spanish translations for soplos-appimage-manager package.
+# Copyright (C) 2026 THE PACKAGE'S COPYRIGHT HOLDER
+# This file is distributed under the same license as the PACKAGE package.
+# Automatically generated, 2026.
+#
+msgid ""
+msgstr ""
+"Project-Id-Version: soplos-appimage-manager 1.0.0\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2026-03-21 00:00+0100\n"
+"PO-Revision-Date: 2026-03-21 00:00+0100\n"
+"Last-Translator: Automatically generated\n"
+"Language-Team: none\n"
+"Language: es\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Plural-Forms: nplurals=2; plural=(n != 1);\n"
+
+#: main.py
+msgid "Soplos AppImage Manager"
+msgstr "Soplos AppImage Manager"
+
+#: ui/main_window.py
+msgid "Add AppImage"
+msgstr "Añadir AppImage"
+
+#: ui/main_window.py
+msgid "Refresh"
+msgstr "Actualizar"
+
+#: ui/main_window.py
+msgid "Check for updates"
+msgstr "Buscar actualizaciones"
+
+#: ui/main_window.py
+msgid "Run"
+msgstr "Ejecutar"
+
+#: ui/main_window.py
+msgid "Integrate"
+msgstr "Integrar"
+
+#: ui/main_window.py
+msgid "Delete"
+msgstr "Eliminar"
+
+#: ui/main_window.py
+msgid ""
+"No AppImages installed.\n"
+"Click '+' to add one."
+msgstr ""
+"No hay AppImages instaladas.\n"
+"Haz clic en '+' para añadir una."
+
+#: ui/main_window.py
+msgid "Ready - {desktop} on {protocol}"
+msgstr "Listo - {desktop} en {protocol}"
+
+#: ui/dialogs/add_appimage_dialog.py
+msgid "Select an AppImage"
+msgstr "Seleccionar un AppImage"
+
+#: ui/dialogs/add_appimage_dialog.py
+msgid "AppImage files"
+msgstr "Archivos AppImage"
+
+#: ui/main_window.py
+msgid "Adding AppImage…"
+msgstr "Añadiendo AppImage…"
+
+#: ui/main_window.py
+msgid "Extracting metadata, please wait."
+msgstr "Extrayendo metadatos, por favor espera."
+
+#: ui/main_window.py
+msgid "Error adding AppImage"
+msgstr "Error al añadir AppImage"
+
+#: ui/main_window.py
+msgid "Integrating AppImage…"
+msgstr "Integrando AppImage…"
+
+#: ui/main_window.py
+msgid "Error integrating AppImage"
+msgstr "Error al integrar AppImage"
+
+#: ui/main_window.py
+msgid "Update information"
+msgstr "Información de actualización"
+
+#: ui/main_window.py
+msgid "No update information available"
+msgstr "Sin información de actualización disponible"
+
+#: ui/main_window.py
+msgid "This AppImage does not contain update information."
+msgstr "Este AppImage no contiene información de actualización."
+
+#: ui/main_window.py
+msgid "Error running AppImage"
+msgstr "Error al ejecutar AppImage"
+
+#: ui/main_window.py
+msgid "Delete {}?"
+msgstr "¿Eliminar {}?"
+
+#: ui/main_window.py
+msgid "This will remove the AppImage file and its desktop entry."
+msgstr "Esto eliminará el archivo AppImage y su entrada de escritorio."
+
+#: ui/main_window.py
+msgid "Error deleting AppImage"
+msgstr "Error al eliminar AppImage"
+
+#: main.py
+msgid "AppImage integration manager for Soplos Linux."
+msgstr "Gestor de integración de AppImages para Soplos Linux."

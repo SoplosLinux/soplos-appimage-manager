@@ -1,0 +1,34 @@
+.TH SOPLOS-APPIMAGE-MANAGER 1 "March 2026" "Soplos Linux" "User Commands"
+.SH NAME
+soplos-appimage-manager \- Manage and integrate AppImage applications on Soplos Linux
+.SH SYNOPSIS
+.B soplos-appimage-manager
+.SH DESCRIPTION
+.B soplos-appimage-manager
+is a lightweight AppImage integration manager tailored for Soplos Linux. It allows users to add AppImage files to the desktop environment: the application moves the file to \fI~/AppImages/\fR, extracts its icon and metadata, and creates a \fI.desktop\fR entry so it appears in the application menu.
+.PP
+The application provides a graphical interface (GTK+ 3) to manage all your AppImages from a single place, including support for running, deleting, checking for updates and integrating manually placed AppImages.
+.PP
+AppImages that are manually placed in \fI~/AppImages/\fR are automatically detected and can be integrated with a single click.
+.SH OPTIONS
+.B soplos-appimage-manager
+does not accept command-line options. It is a strictly graphical application.
+.SH FILES
+.TP
+.I ~/AppImages/
+Directory where managed AppImage files are stored.
+.TP
+.I ~/AppImages/.icons/
+Directory where extracted AppImage icons are stored.
+.TP
+.I ~/.local/share/applications/soplos-appimage-*.desktop
+Desktop entries created by the manager.
+.SH AUTHORS
+.B Soplos Linux
+(info@soploslinux.com).
+.SH COPYRIGHT
+Copyright \(co 2026 Sergi Perich.
+License: GPL-3.0+. This is free software: you are free to change and redistribute it. There is NO WARRANTY, to the extent permitted by law.
+.SH SEE ALSO
+.BR gtk3 (1),
+.BR appimage (1)

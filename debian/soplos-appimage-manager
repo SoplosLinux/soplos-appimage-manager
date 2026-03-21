@@ -1,0 +1,41 @@
+#!/bin/bash
+# Wrapper for Soplos AppImage Manager: configure desktop environment and launch the app
+export WMCLASS="org.soplos.appimagemanager"
+export GDK_STARTUP_NOTIFICATION_ID="${STARTUP_ID:-0}"
+
+# Ensure we run from the installed tree
+cd /usr/share/soplos-appimage-manager || exit 1
+
+exec python3 -c "
+import sys, os
+sys.path.insert(0, '/usr/share/soplos-appimage-manager')
+os.environ['GDK_STARTUP_ID'] = '${GDK_STARTUP_NOTIFICATION_ID}'
+os.environ['WMCLASS'] = 'org.soplos.appimagemanager'
+
+import gi
+gi.require_version('Gtk', '3.0')
+from gi.repository import Gtk, GLib, Gdk
+
+GLib.set_prgname('org.soplos.appimagemanager')
+GLib.set_application_name('soplos-appimage-manager')
+Gtk.Window.set_default_icon_name('org.soplos.appimagemanager')
+if hasattr(Gdk, 'set_program_class'):
+    Gdk.set_program_class('org.soplos.appimagemanager')
+
+import main
+try:
+    if hasattr(main, 'main'):
+        sys.exit(main.main())
+    else:
+        for attr_name in dir(main):
+            if attr_name.lower() in ['main','run','start']:
+                attr = getattr(main, attr_name)
+                if callable(attr):
+                    sys.exit(attr())
+                    break
+        else:
+            pass
+except Exception as e:
+    print(f'Error executing main.py: {e}')
+    sys.exit(1)
+"

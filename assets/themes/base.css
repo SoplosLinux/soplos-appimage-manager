@@ -1,0 +1,73 @@
+/* Base Theme for Soplos AppImage Manager - GTK3 CSS */
+/* Minimal structural styles only. Buttons use the system theme. */
+
+window {
+    background-color: @theme_bg_color;
+    color: @theme_fg_color;
+}
+
+/* HeaderBar */
+headerbar,
+.titlebar {
+    background-color: @soplos_header_bg;
+    color: @theme_fg_color;
+    border-bottom: 1px solid @borders;
+    box-shadow: none;
+}
+
+headerbar button.titlebutton {
+    color: @theme_fg_color;
+    background: transparent;
+    border: none;
+    padding: 6px;
+    border-radius: 4px;
+}
+
+headerbar button.titlebutton:hover {
+    background-color: @soplos_button_hover_bg;
+}
+
+headerbar button.titlebutton.close:hover {
+    background-color: @error_color;
+    color: white;
+}
+
+/* ListBox */
+list {
+    background-color: @theme_bg_color;
+    color: @theme_fg_color;
+}
+
+list row {
+    background-color: @theme_bg_color;
+    color: @theme_fg_color;
+    border-bottom: 1px solid @borders;
+}
+
+list row:hover {
+    background-color: @soplos_row_hover_bg;
+}
+
+/* Badge labels */
+.badge-label {
+    background-color: @soplos_badge_bg;
+    color: @theme_fg_color;
+    border-radius: 4px;
+    padding: 2px 8px;
+    font-size: 0.8em;
+}
+
+/* ScrolledWindow */
+scrolledwindow,
+scrolledwindow viewport {
+    background-color: @theme_bg_color;
+}
+
+/* Labels */
+label {
+    color: @theme_fg_color;
+}
+
+label.dim-label {
+    color: @insensitive_fg_color;
+}
