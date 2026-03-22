@@ -2,7 +2,7 @@ from setuptools import setup, find_packages
 
 setup(
     name='soplos-appimage-manager',
-    version='1.0.0',
+    version='1.0.0-1',
     description='AppImage integration manager for Soplos Linux',
     author='Sergi Perich',
     author_email='info@soploslinux.com',

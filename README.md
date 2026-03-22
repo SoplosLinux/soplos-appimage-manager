@@ -1,7 +1,7 @@
 # Soplos AppImage Manager
 
 [![License: GPL-3.0+](https://img.shields.io/badge/License-GPL--3.0%2B-blue.svg)](https://www.gnu.org/licenses/gpl-3.0)
-[![Version](https://img.shields.io/badge/version-1.0.0-green.svg)]()
+[![Version](https://img.shields.io/badge/version-1.0.0--1-green.svg)]()
 
 AppImage integration manager for Soplos Linux.
 
@@ -71,6 +71,19 @@ soplos-appimage-manager/
 4. The icon is saved to `~/AppImages/.icons/`
 5. A `.desktop` file is written to `~/.local/share/applications/`
 6. The app appears in the application menu immediately
+
+## 🆕 New in version 1.0.0-1 (March 22, 2026)
+
+- **UI colors**: Fixed background color inconsistency — window, list and scrolled area now consistently use the correct Soplos dark theme color (#2b2b2b).
+
+## New in version 1.0.0 (March 22, 2026)
+
+- **Initial Release**: First stable release of the Soplos AppImage Manager.
+- **Core Integration**: Add AppImages via file chooser or drag & drop. Automatic metadata and icon extraction.
+- **Management**: Desktop entry creation in `~/.local/share/applications/` and icon storage in `~/AppImages/.icons/`.
+- **Universal Detection**: Recognizes AppImages from any source and provides a one-click integration button.
+- **Update Info**: Parses `.upd_info` ELF sections for AppImage update endpoints (zsync, HTTP).
+- **Interface**: Full 8-language internationalization and Soplos ecosystem UI styling.
 
 ## License
 
