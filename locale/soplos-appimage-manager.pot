@@ -1,14 +1,14 @@
 # SOME DESCRIPTIVE TITLE.
-# Copyright (C) 2026 THE PACKAGE'S COPYRIGHT HOLDER
-# This file is distributed under the same license as the PACKAGE package.
-# FIRST AUTHOR <EMAIL@ADDRESS>, 2026.
+# Copyright (C) YEAR Sergi Perich
+# This file is distributed under the same license as the soplos-appimage-manager package.
+# FIRST AUTHOR <EMAIL@ADDRESS>, YEAR.
 #
 #, fuzzy
 msgid ""
 msgstr ""
 "Project-Id-Version: soplos-appimage-manager 1.0.0\n"
-"Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-03-21 00:00+0100\n"
+"Report-Msgid-Bugs-To: info@soploslinux.com\n"
+"POT-Creation-Date: 2026-03-30 09:59+0200\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -17,100 +17,277 @@ msgstr ""
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 
-#: main.py
-msgid "Soplos AppImage Manager"
+#: ui/main_window.py:17 ui/main_window.py:681
+msgid "Properties"
 msgstr ""
 
-#: ui/main_window.py
-msgid "Add AppImage"
+#: ui/main_window.py:26
+msgid "Cancel"
 msgstr ""
 
-#: ui/main_window.py
-msgid "Refresh"
+#: ui/main_window.py:27
+msgid "Save"
 msgstr ""
 
-#: ui/main_window.py
+#: ui/main_window.py:66
+msgid "File"
+msgstr ""
+
+#: ui/main_window.py:67
+msgid "Size"
+msgstr ""
+
+#: ui/main_window.py:68
+msgid "Type"
+msgstr ""
+
+#: ui/main_window.py:93
+msgid "Name"
+msgstr ""
+
+#: ui/main_window.py:100
+msgid "Version"
+msgstr ""
+
+#: ui/main_window.py:103
+msgid "e.g. 1.2.3"
+msgstr ""
+
+#: ui/main_window.py:107
+msgid "Description"
+msgstr ""
+
+#: ui/main_window.py:110
+msgid "Short description"
+msgstr ""
+
+#: ui/main_window.py:114
+msgid "Categories"
+msgstr ""
+
+#: ui/main_window.py:124
+msgid "Update URL"
+msgstr ""
+
+#: ui/main_window.py:131
+msgid "Supported sources for automatic updates:"
+msgstr ""
+
+#: ui/main_window.py:133
+msgid "● GitHub / GitLab / Codeberg → paste the project URL"
+msgstr ""
+
+#: ui/main_window.py:134
+msgid "● Any server → paste a direct link ending in .appimage"
+msgstr ""
+
+#: ui/main_window.py:146
+msgid "https://github.com/user/repo  or  https://example.com/latest/App.AppImage"
+msgstr ""
+
+#: ui/main_window.py:171
+msgid "Update"
+msgstr ""
+
+#: ui/main_window.py:203
+msgid "Checking for updates…"
+msgstr ""
+
+#: ui/main_window.py:228 ui/main_window.py:441
+msgid "Close"
+msgstr ""
+
+#: ui/main_window.py:229
+msgid "Update Now"
+msgstr ""
+
+#: ui/main_window.py:240
+msgid ""
+"No update source configured.\n"
+"Add a GitHub, GitLab, Codeberg URL or a direct .appimage link in Properties."
+msgstr ""
+
+#: ui/main_window.py:267 ui/main_window.py:291
+msgid "Update available!"
+msgstr ""
+
+#: ui/main_window.py:278 ui/main_window.py:295
+msgid "Already up to date."
+msgstr ""
+
+#: ui/main_window.py:283 ui/main_window.py:299
+msgid "Could not check:"
+msgstr ""
+
+#: ui/main_window.py:308
+msgid "Downloading update…"
+msgstr ""
+
+#: ui/main_window.py:375
+msgid "Update completed successfully!"
+msgstr ""
+
+#: ui/main_window.py:379
+msgid "Update failed."
+msgstr ""
+
+#: ui/main_window.py:395
+msgid "Check All Updates"
+msgstr ""
+
+#: ui/main_window.py:443
+msgid "Update All"
+msgstr ""
+
+#: ui/main_window.py:454
+msgid ""
+"No AppImages have update sources configured.\n"
+"Add GitHub, GitLab, Codeberg URLs or direct links in Properties."
+msgstr ""
+
+#: ui/main_window.py:460
+#, python-brace-format
+msgid "Checking {n} AppImage(s) for updates…"
+msgstr ""
+
+#: ui/main_window.py:536
+msgid "Update available"
+msgstr ""
+
+#: ui/main_window.py:540
+msgid "Up to date"
+msgstr ""
+
+#: ui/main_window.py:553
+msgid "update(s) available"
+msgstr ""
+
+#: ui/main_window.py:558
+msgid "All AppImages are up to date."
+msgstr ""
+
+#: ui/main_window.py:567 ui/main_window.py:573
+msgid "Updating…"
+msgstr ""
+
+#: ui/main_window.py:542
+msgid "Error"
+msgstr ""
+
+#: ui/main_window.py:598
+msgid "Updated"
+msgstr ""
+
+#: ui/main_window.py:617
+msgid "Update complete!"
+msgstr ""
+
+#: ui/main_window.py:689
 msgid "Check for updates"
 msgstr ""
 
-#: ui/main_window.py
+#: ui/main_window.py:697
 msgid "Run"
 msgstr ""
 
-#: ui/main_window.py
+#: ui/main_window.py:703
 msgid "Integrate"
 msgstr ""
 
-#: ui/main_window.py
+#: ui/main_window.py:712
 msgid "Delete"
 msgstr ""
 
-#: ui/main_window.py
+#: ui/main_window.py:767
+msgid "Add AppImage"
+msgstr ""
+
+#: ui/main_window.py:774
+msgid "Check all updates"
+msgstr ""
+
+#: ui/main_window.py:804
 msgid ""
 "No AppImages installed.\n"
 "Click '+' to add one."
 msgstr ""
 
-#: ui/main_window.py
-msgid "Ready - {desktop} on {protocol}"
+#: ui/main_window.py:835
+#, python-brace-format
+msgid "{desktop} on {protocol}"
 msgstr ""
 
-#: ui/dialogs/add_appimage_dialog.py
+#: ui/main_window.py:918
 msgid "Select an AppImage"
 msgstr ""
 
-#: ui/dialogs/add_appimage_dialog.py
+#: ui/main_window.py:927
 msgid "AppImage files"
 msgstr ""
 
-#: ui/main_window.py
+#: ui/main_window.py:947
 msgid "Adding AppImage…"
 msgstr ""
 
-#: ui/main_window.py
+#: ui/main_window.py:949 ui/main_window.py:971
 msgid "Extracting metadata, please wait."
 msgstr ""
 
-#: ui/main_window.py
+#: ui/main_window.py:961
 msgid "Error adding AppImage"
 msgstr ""
 
-#: ui/main_window.py
+#: ui/main_window.py:969
 msgid "Integrating AppImage…"
 msgstr ""
 
-#: ui/main_window.py
+#: ui/main_window.py:981
 msgid "Error integrating AppImage"
 msgstr ""
 
-#: ui/main_window.py
-msgid "Update information"
+#: ui/main_window.py:1000
+msgid "Error saving properties"
 msgstr ""
 
-#: ui/main_window.py
-msgid "No update information available"
+#: ui/main_window.py:1020
+msgid "No update source configured"
 msgstr ""
 
-#: ui/main_window.py
-msgid "This AppImage does not contain update information."
+#: ui/main_window.py:1021
+msgid ""
+"Open Properties and add an update URL:\n"
+"\n"
+"● GitHub/GitLab/Codeberg project URL\n"
+"● Direct link to the .appimage file\n"
+"\n"
+"Or install appimageupdatetool if the AppImage\n"
+"has update info embedded."
 msgstr ""
 
-#: ui/main_window.py
+#: ui/main_window.py:1038
 msgid "Error running AppImage"
 msgstr ""
 
-#: ui/main_window.py
+#: ui/main_window.py:1045
 msgid "Delete {}?"
 msgstr ""
 
-#: ui/main_window.py
+#: ui/main_window.py:1048
 msgid "This will remove the AppImage file and its desktop entry."
 msgstr ""
 
-#: ui/main_window.py
+#: ui/main_window.py:1055
 msgid "Error deleting AppImage"
 msgstr ""
 
-#: main.py
+#: ui/main_window.py:1082
 msgid "AppImage integration manager for Soplos Linux."
+msgstr ""
+
+#: ui/main_window.py:122
+msgid "Run as root"
+msgstr ""
+
+#: ui/main_window.py:123
+msgid "Launch with pkexec (requires authentication)"
 msgstr ""

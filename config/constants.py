@@ -7,7 +7,7 @@ from gi.repository import GLib
 
 APP_ID = 'org.soplos.appimagemanager'
 APP_NAME = 'Soplos AppImage Manager'
-APP_VERSION = '1.0.0'
+APP_VERSION = '1.0.1'
 
 APPIMAGES_DIR = Path.home() / 'AppImages'
 ICONS_DIR = APPIMAGES_DIR / '.icons'

@@ -5,6 +5,23 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/lang/en/).
 
+## [1.0.1] - 2026-03-30
+
+### ✨ Added
+- **Properties dialog**: View and edit name, version, description, categories and update URL for each integrated AppImage
+- **Automatic update checking**: Checks for updates via GitHub, GitLab and Codeberg release APIs, direct URL comparison (`Last-Modified` header), or embedded `appimageupdatetool` info
+- **Check All Updates**: New button in the header bar checks all AppImages with a configured update source at once — replaces the Refresh button
+- **Update All**: From the Check All Updates dialog, update every AppImage that has a newer version available in one action
+- **Run as root**: Toggle in Properties to launch any AppImage with `pkexec` — a PolicyKit authentication dialog appears on launch; the preference is stored in the `.desktop` file as `X-AppImage-RunAsRoot=true`
+
+### 🔧 Fixed
+- **Icon extraction**: Improved icon search — handles relative symlinks, case-insensitive matching, pixmaps directories and additional hicolor sizes
+- **Hardcoded UI strings**: All visible UI text now passes through the translation system; several strings were previously displayed in English regardless of locale
+- **Translation coverage**: All 8 languages (de, en, es, fr, it, pt, ro, ru) now have full coverage including all new strings added in this release
+- **Theme Support**: Fixed dark mode being forced on light themes; the application now correctly respects the system's light or dark GTK theme preference
+
+---
+
 ## [1.0.0-1] - 2026-03-22
 
 ### 🔧 Fixed

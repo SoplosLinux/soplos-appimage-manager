@@ -1,7 +1,7 @@
 # Soplos AppImage Manager
 
 [![License: GPL-3.0+](https://img.shields.io/badge/License-GPL--3.0%2B-blue.svg)](https://www.gnu.org/licenses/gpl-3.0)
-[![Version](https://img.shields.io/badge/version-1.0.0--1-green.svg)]()
+[![Version](https://img.shields.io/badge/version-1.0.1-green.svg)]()
 
 AppImage integration manager for Soplos Linux.
 
@@ -17,6 +17,12 @@ Soplos AppImage Manager lets you easily integrate AppImage applications into you
   <img src="assets/screenshots/screenshot3.png" width="24%" alt="Mixed list"/>
   <img src="assets/screenshots/screenshot4.png" width="24%" alt="Integrated AppImages"/>
 </div>
+<div align="center">
+  <img src="assets/screenshots/screenshot5.png" width="24%" alt="Properties dialog"/>
+  <img src="assets/screenshots/screenshot6.png" width="24%" alt="Check for updates"/>
+  <img src="assets/screenshots/screenshot7.png" width="24%" alt="Check All Updates"/>
+  <img src="assets/screenshots/screenshot8.png" width="24%" alt="Update available"/>
+</div>
 
 ## Features
 
@@ -30,8 +36,11 @@ Soplos AppImage Manager lets you easily integrate AppImage applications into you
 - **Auto-refresh**: file monitor watches `~/AppImages/` and `~/.local/share/applications/` — no manual refresh needed
 - **Run**: launch any managed AppImage from the manager
 - **Delete**: remove the AppImage, icon and desktop entry in one click
-- **Update info**: reads the update URL from the embedded `.upd_info` ELF section via `readelf`
-- **Internationalisation**: ships with 8 languages (es, en, fr, de, it, pt, ro, ru)
+- **Properties**: edit name, version, description, categories and update URL for each AppImage
+- **Run as root**: mark any AppImage to launch with `pkexec` — PolicyKit authentication dialog appears on launch
+- **Automatic updates**: checks GitHub, GitLab and Codeberg release APIs, direct URL comparison, or embedded `appimageupdatetool` info
+- **Check All Updates**: inspect all AppImages with a configured update source in one click; update them all from the same dialog
+- **Internationalisation**: ships with 8 languages (de, en, es, fr, it, pt, ro, ru)
 - **Soplos UI**: consistent dark theme matching the Soplos Linux ecosystem
 
 ## Requirements
@@ -71,6 +80,16 @@ soplos-appimage-manager/
 4. The icon is saved to `~/AppImages/.icons/`
 5. A `.desktop` file is written to `~/.local/share/applications/`
 6. The app appears in the application menu immediately
+
+## 🆕 New in version 1.0.1 (March 30, 2026)
+
+- **Properties dialog**: view and edit name, version, description, categories and update URL per AppImage
+- **Run as root**: toggle in Properties to launch any AppImage with `pkexec` (PolicyKit authentication)
+- **Automatic updates**: GitHub, GitLab and Codeberg release APIs, direct URL (`Last-Modified`), or embedded `appimageupdatetool` info
+- **Check All Updates**: header button replaces Refresh — checks all AppImages with a source at once and lets you update them all in one action
+- **Improved icon extraction**: relative symlinks, case-insensitive search, pixmaps and additional hicolor sizes
+- **Full translation coverage**: all visible UI strings translated across all 8 languages
+- **Theme Support**: The application now seamlessly respects the system's light or dark theme preference, removing the forced dark mode
 
 ## 🆕 New in version 1.0.0-1 (March 22, 2026)
 

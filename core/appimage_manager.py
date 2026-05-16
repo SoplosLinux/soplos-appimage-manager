@@ -26,6 +26,8 @@ class AppImage:
     version: str = ''
     comment: str = ''
     categories: str = 'Utility;'
+    update_url: str = ''
+    run_as_root: bool = False
 
 
 class AppImageManager:
@@ -74,13 +76,17 @@ class AppImageManager:
                 version = ''
                 comment = ''
                 categories = 'Utility;'
+                update_url = ''
 
+                run_as_root = False
                 if match:
                     desktop_path, entry = match
                     name = entry.get('Name', name)
                     version = entry.get('X-AppImage-Version', '')
                     comment = entry.get('Comment', '')
                     categories = entry.get('Categories', 'Utility;')
+                    update_url = entry.get('X-AppImage-UpdateUrl', '')
+                    run_as_root = entry.get('X-AppImage-RunAsRoot', '').lower() == 'true'
                     icon_raw = entry.get('Icon', '')
                     if icon_raw and os.path.isabs(icon_raw):
                         p = Path(icon_raw)
@@ -97,6 +103,8 @@ class AppImageManager:
                     version=version,
                     comment=comment,
                     categories=categories,
+                    update_url=update_url,
+                    run_as_root=run_as_root,
                 )
                 result.append(appimage)
             except Exception:
@@ -149,6 +157,7 @@ class AppImageManager:
             comment=meta.get('comment', ''),
             categories=meta.get('categories', 'Utility;'),
             version=meta.get('version', ''),
+            update_url='',
         )
 
         self._update_desktop_db()
@@ -163,6 +172,7 @@ class AppImageManager:
             version=meta.get('version', ''),
             comment=meta.get('comment', ''),
             categories=meta.get('categories', 'Utility;'),
+            update_url='',
         )
 
     def integrate_existing(self, appimage: AppImage):
@@ -188,6 +198,7 @@ class AppImageManager:
             comment=meta.get('comment', ''),
             categories=meta.get('categories', 'Utility;'),
             version=meta.get('version', ''),
+            update_url='',
         )
         self._update_desktop_db()
 
@@ -228,11 +239,425 @@ class AppImageManager:
             pass
         return '?'
 
+    def update_info(self, appimage: AppImage, name: str, version: str,
+                    comment: str, categories: str, update_url: str,
+                    run_as_root: bool = False) -> AppImage:
+        """Update metadata for an integrated AppImage (rewrites its .desktop file)."""
+        if not appimage.desktop_file_path or not appimage.desktop_file_path.exists():
+            raise ValueError('AppImage is not integrated')
+        icon_value = str(appimage.icon_path) if appimage.icon_path else 'application-x-executable'
+        self._write_desktop_file(
+            desktop_path=appimage.desktop_file_path,
+            name=name,
+            exec_path=appimage.file_path,
+            icon=icon_value,
+            comment=comment,
+            categories=categories,
+            version=version,
+            update_url=update_url,
+            run_as_root=run_as_root,
+        )
+        self._update_desktop_db()
+        appimage.name = name
+        appimage.version = version
+        appimage.comment = comment
+        appimage.categories = categories
+        appimage.update_url = update_url
+        appimage.run_as_root = run_as_root
+        return appimage
+
+    # ── Update methods ───────────────────────────────────────────────────────
+
+    def get_update_mode(self, appimage: AppImage) -> str:
+        """
+        Determine the best update method for this AppImage.
+        Returns: 'api' | 'direct' | 'tool' | 'none'
+          api    → GitHub, GitLab or Codeberg/Forgejo project URL
+          direct → direct link to an .appimage file
+          tool   → appimageupdatetool (reads embedded .upd_info)
+          none   → no method available
+        """
+        if appimage.update_url:
+            url = appimage.update_url
+            if (self._parse_github_url(url)
+                    or self._parse_gitlab_url(url)
+                    or self._parse_forgejo_url(url)):
+                return 'api'
+            if url.lower().endswith('.appimage'):
+                return 'direct'
+        if shutil.which('appimageupdatetool') or shutil.which('AppImageUpdate'):
+            return 'tool'
+        return 'none'
+
+    # ── API update (GitHub, GitLab, Codeberg/Forgejo) ────────────────────────
+
+    def _parse_github_url(self, url: str) -> Optional[tuple]:
+        """Extract (owner, repo) from a GitHub URL, or None."""
+        m = re.match(r'https?://github\.com/([^/]+)/([^/?#\s]+)', url)
+        if m:
+            return m.group(1), m.group(2).rstrip('.git')
+        return None
+
+    def _parse_gitlab_url(self, url: str) -> Optional[tuple]:
+        """Extract (owner, repo, is_packages) from a GitLab.com URL, or None."""
+        m = re.match(r'https?://gitlab\.com/([^/]+)/([^/?#\s]+)', url)
+        if m:
+            is_packages = '/-/packages' in url
+            return m.group(1), m.group(2).rstrip('.git'), is_packages
+        return None
+
+    def _parse_forgejo_url(self, url: str) -> Optional[tuple]:
+        """
+        Extract (host, owner, repo) from a Codeberg or generic Forgejo/Gitea URL.
+        Matches codeberg.org and any host with /api/v1 style (Gitea/Forgejo).
+        """
+        m = re.match(r'https?://(codeberg\.org|[^/]+)/([^/]+)/([^/?#\s]+)', url)
+        if m:
+            host = m.group(1)
+            # Only auto-detect codeberg; other hosts must be explicit Forgejo instances
+            # (to avoid false positives with arbitrary URLs)
+            if host == 'codeberg.org':
+                return host, m.group(2), m.group(3).rstrip('.git')
+        return None
+
+    def check_for_update_api(self, appimage: AppImage) -> dict:
+        """
+        Query GitHub, GitLab or Codeberg/Forgejo releases API for a newer AppImage.
+        Returns a dict: has_update (bool|None), message, latest_version,
+                        download_url, asset_name, asset_size.
+        """
+        import urllib.request
+        import json
+        import platform
+
+        url = appimage.update_url or ''
+        gh = self._parse_github_url(url)
+        gl = self._parse_gitlab_url(url)
+        fj = self._parse_forgejo_url(url)
+
+        headers = {'User-Agent': 'soplos-appimage-manager/1.0'}
+        if gh:
+            owner, repo = gh
+            api_url = f'https://api.github.com/repos/{owner}/{repo}/releases/latest'
+            headers['Accept'] = 'application/vnd.github+json'
+        elif fj:
+            host, owner, repo = fj
+            api_url = f'https://{host}/api/v1/repos/{owner}/{repo}/releases?limit=1'
+        elif gl:
+            owner, repo, is_pkg = gl
+            encoded_path = f"{owner}%2F{repo}"
+            if is_pkg:
+                api_url = f'https://gitlab.com/api/v4/projects/{encoded_path}/packages?sort=desc&order_by=created_at&per_page=10'
+            else:
+                api_url = f'https://gitlab.com/api/v4/projects/{encoded_path}/releases'
+        else:
+            return {'has_update': None, 'message': 'Not a valid GitHub, GitLab or Codeberg URL'}
+
+        try:
+            req = urllib.request.Request(api_url, headers=headers)
+            with urllib.request.urlopen(req, timeout=15) as resp:
+                data = json.loads(resp.read())
+        except Exception as e:
+            return {'has_update': None, 'message': str(e)}
+
+        assets = []
+        latest_version_str = ''
+
+        if fj:
+            # Forgejo/Gitea API returns a list; take first (latest)
+            releases = data if isinstance(data, list) else [data]
+            if not releases:
+                return {'has_update': None, 'message': 'No releases found'}
+            latest_release = releases[0]
+            latest_version_str = latest_release.get('tag_name', '').lstrip('v')
+            for asset in latest_release.get('assets', []):
+                if asset.get('name', '').lower().endswith('.appimage'):
+                    assets.append({
+                        'name': asset['name'],
+                        'browser_download_url': asset.get('browser_download_url', ''),
+                        'size': asset.get('size', 0),
+                    })
+        elif gl:
+            owner, repo, is_pkg = gl
+            encoded_path = f"{owner}%2F{repo}"
+            
+            if is_pkg:
+                if not isinstance(data, list):
+                    data = [data]
+                for pkg in data:
+                    pkg_id = pkg.get('id')
+                    try:
+                        files_req = urllib.request.Request(f'https://gitlab.com/api/v4/projects/{encoded_path}/packages/{pkg_id}/package_files', headers=headers)
+                        with urllib.request.urlopen(files_req, timeout=10) as files_resp:
+                            pkg_files = json.loads(files_resp.read())
+                    except Exception:
+                        continue
+                    
+                    for f in pkg_files:
+                        fname = f.get('file_name', '')
+                        if fname.lower().endswith('.appimage'):
+                            assets.append({
+                                'name': fname,
+                                'browser_download_url': f"https://gitlab.com/api/v4/projects/{encoded_path}/packages/generic/{pkg.get('name')}/{pkg.get('version')}/{fname}",
+                                'size': f.get('size', 0)
+                            })
+                    if assets:
+                        latest_version_str = pkg.get('version', '')
+                        break
+                
+                if not assets:
+                    return {'has_update': None, 'message': 'No AppImage generic packages found on GitLab'}
+                    
+            else:
+                if not isinstance(data, list) or len(data) == 0:
+                    return {'has_update': None, 'message': 'No releases found on GitLab'}
+                latest_release = data[0]
+                latest_version_str = latest_release.get('tag_name', '').lstrip('v')
+                if 'assets' in latest_release and 'links' in latest_release['assets']:
+                    for link in latest_release['assets']['links']:
+                        link_name = link.get('name', '')
+                        link_url = link.get('url', '')
+                        if '.appimage' in link_name.lower() or '.appimage' in link_url.lower():
+                            assets.append({
+                                'name': link_name,
+                                'browser_download_url': link_url,
+                                'size': 0
+                            })
+        else:
+            latest_release = data
+            latest_version_str = latest_release.get('tag_name', '').lstrip('v')
+            assets = [a for a in latest_release.get('assets', []) if a['name'].lower().endswith('.appimage')]
+
+        if not assets:
+            return {'has_update': None, 'message': 'No AppImage assets found in the latest release'}
+
+        # Version fallback parsing
+        current_version = (appimage.version or '').lstrip('v')
+        if not current_version:
+            import re
+            match = re.search(r'[-_]v?(\d+\.\d+(?:\.\d+)?)', appimage.file_path.stem)
+            if match:
+                current_version = match.group(1)
+
+        if not current_version:
+            return {
+                'has_update': None,
+                'message': f'Cannot determine current version to compare against v{latest_version_str}. Please set version in Properties.',
+                'latest_version': latest_version_str
+            }
+
+        def _parse_ver(v_str):
+            import re
+            return [int(x) for x in re.sub(r'[^\d]+', '.', v_str).split('.') if x]
+
+        try:
+            has_update = _parse_ver(latest_version_str) > _parse_ver(current_version)
+        except Exception:
+            has_update = (latest_version_str != current_version)
+            
+        message = f'v{latest_version_str}'
+        message += f'  (current: v{current_version})'
+
+        # Prefer asset matching current architecture
+        machine = platform.machine().lower()
+        arch_aliases = {
+            'x86_64': ['x86_64', 'amd64'],
+            'aarch64': ['aarch64', 'arm64'],
+        }
+        preferred = arch_aliases.get(machine, [machine])
+        best = next(
+            (a for a in assets if any(p in a['name'].lower() for p in preferred)),
+            assets[0]
+        )
+
+        return {
+            'has_update': has_update,
+            'message': message,
+            'latest_version': latest_version_str,
+            'download_url': best['browser_download_url'],
+            'asset_name': best['name'],
+            'asset_size': best.get('size', 0),
+        }
+
+    def check_for_update_direct(self, appimage: AppImage) -> dict:
+        """
+        Check a direct .appimage URL for updates by comparing the remote
+        Last-Modified header against the local file's mtime.
+        If the server doesn't provide Last-Modified, always offers the download.
+        """
+        import urllib.request
+        from urllib.parse import urlparse
+        from email.utils import parsedate_to_datetime
+
+        url = appimage.update_url or ''
+        asset_name = Path(urlparse(url).path).name or appimage.file_path.name
+        if not asset_name.lower().endswith('.appimage'):
+            asset_name += '.AppImage'
+
+        try:
+            req = urllib.request.Request(
+                url,
+                headers={'User-Agent': 'soplos-appimage-manager/1.0'},
+                method='HEAD',
+            )
+            with urllib.request.urlopen(req, timeout=10) as resp:
+                last_modified = resp.headers.get('Last-Modified')
+                content_length = int(resp.headers.get('Content-Length', 0))
+        except Exception as e:
+            return {'has_update': None, 'message': str(e)}
+
+        if last_modified:
+            try:
+                import datetime
+                remote_dt = parsedate_to_datetime(last_modified)
+                file_mtime = appimage.file_path.stat().st_mtime
+                file_dt = datetime.datetime.fromtimestamp(
+                    file_mtime, tz=datetime.timezone.utc)
+                has_update = remote_dt > file_dt
+                message = (remote_dt.strftime('%Y-%m-%d')
+                           if has_update else 'File appears to be up to date')
+            except Exception:
+                has_update = True
+                message = 'Cannot compare dates, offering download'
+        else:
+            has_update = True
+            message = 'Server does not provide version info'
+
+        return {
+            'has_update': has_update,
+            'message': message,
+            'latest_version': '',
+            'download_url': url,
+            'asset_name': asset_name,
+            'asset_size': content_length,
+        }
+
+    def download_and_install_new(self, appimage: AppImage, download_url: str,
+                                 new_asset_name: str, progress_callback=None) -> Path:
+        """
+        Download a new AppImage to a new filename, atomically move it over,
+        delete the old file and return the new Path. Raises on any error.
+        """
+        import urllib.request
+        from config.constants import APPIMAGES_DIR
+
+        if not new_asset_name.lower().endswith('.appimage'):
+            new_asset_name += '.AppImage'
+
+        new_path = APPIMAGES_DIR / new_asset_name
+        
+        # Avoid overwriting perfectly fine existing files if name matches
+        if new_path.exists() and new_path != appimage.file_path:
+            stem = new_path.stem
+            suffix = new_path.suffix
+            i = 1
+            while new_path.exists() and new_path != appimage.file_path:
+                new_path = APPIMAGES_DIR / f'{stem}_{i}{suffix}'
+                i += 1
+
+        tmp_path = new_path.with_suffix('.part')
+
+        try:
+            req = urllib.request.Request(
+                download_url,
+                headers={'User-Agent': 'soplos-appimage-manager/1.0'}
+            )
+            with urllib.request.urlopen(req, timeout=120) as resp:
+                total = int(resp.headers.get('Content-Length', 0))
+                downloaded = 0
+                with open(tmp_path, 'wb') as f:
+                    while True:
+                        chunk = resp.read(65536)
+                        if not chunk:
+                            break
+                        f.write(chunk)
+                        downloaded += len(chunk)
+                        if progress_callback:
+                            progress_callback(downloaded, total)
+            tmp_path.chmod(0o755)
+
+            # Delete old file safely
+            if appimage.file_path.exists() and appimage.file_path != new_path:
+                appimage.file_path.unlink()
+
+            tmp_path.replace(new_path)
+            appimage.file_path = new_path
+            return new_path
+        except Exception:
+            if tmp_path.exists():
+                tmp_path.unlink(missing_ok=True)
+            raise
+
+    # ── appimageupdatetool fallback ───────────────────────────────────────────
+
+    def check_for_update_tool(self, appimage: AppImage) -> tuple:
+        """
+        Check via appimageupdatetool --check-for-update.
+        Returns (has_update: bool|None, message: str).
+        """
+        tool = shutil.which('appimageupdatetool') or shutil.which('AppImageUpdate')
+        if not tool:
+            return None, 'appimageupdatetool is not installed'
+        try:
+            result = subprocess.run(
+                [tool, '--check-for-update', str(appimage.file_path)],
+                capture_output=True, text=True, timeout=30
+            )
+            output = (result.stdout + result.stderr).strip()
+            if result.returncode == 1:
+                return True, output
+            elif result.returncode == 0:
+                return False, output
+            else:
+                return None, output or 'No update information found in binary'
+        except subprocess.TimeoutExpired:
+            return None, 'Timeout while checking for updates'
+        except Exception as e:
+            return None, str(e)
+
+    def start_update_tool(self, appimage: AppImage) -> subprocess.Popen:
+        """Start appimageupdatetool --overwrite. Returns Popen for streaming output."""
+        tool = shutil.which('appimageupdatetool') or shutil.which('AppImageUpdate')
+        if not tool:
+            raise RuntimeError('appimageupdatetool is not installed')
+        return subprocess.Popen(
+            [tool, '--overwrite', str(appimage.file_path)],
+            stdout=subprocess.PIPE,
+            stderr=subprocess.STDOUT,
+            text=True,
+            bufsize=1,
+        )
+
+    def write_update_info_to_binary(self, appimage: AppImage, url: str) -> bool:
+        """
+        Write a zsync update URL to the .upd_info section of a Type 2 AppImage.
+        The section is 512 bytes at offset 33651 per the AppImage Type 2 spec.
+        Returns True on success.
+        """
+        if appimage.appimage_type != '2':
+            return False
+        try:
+            encoded = url.encode('utf-8')
+            if len(encoded) > 512:
+                return False
+            padded = encoded + b'\x00' * (512 - len(encoded))
+            with open(appimage.file_path, 'r+b') as f:
+                f.seek(33651)
+                f.write(padded)
+            return True
+        except Exception:
+            return False
+
     def get_update_url(self, appimage: AppImage) -> Optional[str]:
         """
-        Read the update info embedded in the AppImage binary (.upd_info ELF section).
-        Returns the raw update string or None.
+        Return the update URL for an AppImage.
+        Prefers the manually saved URL in the .desktop file; falls back to
+        the embedded .upd_info ELF section in the binary.
         """
+        # Prefer saved URL from .desktop
+        if appimage.update_url:
+            return appimage.update_url
+
         # Primary: readelf -x .upd_info
         try:
             result = subprocess.run(
@@ -379,32 +804,65 @@ class AppImageManager:
 
     def _find_icon(self, root: Path, icon_name: str) -> Optional[Path]:
         """Find the best icon file in the extracted AppImage."""
-        # 1. .DirIcon (resolve symlinks)
+        # 1. .DirIcon — handle both real files and symlinks (including relative)
         diricon = root / '.DirIcon'
-        if diricon.exists() or os.path.islink(str(diricon)):
-            real = Path(os.path.realpath(str(diricon)))
-            if real.exists() and os.path.isfile(str(real)):
+        if os.path.islink(str(diricon)):
+            link_target = os.readlink(str(diricon))
+            if os.path.isabs(link_target):
+                real = Path(link_target)
+            else:
+                real = (diricon.parent / link_target).resolve()
+            if real.exists() and real.is_file():
                 return real
+        elif diricon.exists() and diricon.is_file():
+            return diricon
 
-        # 2. Root level {name}.svg / {name}.png
+        # 2. Root level {name}.svg / {name}.png (exact and case-insensitive)
         for ext in ['.svg', '.png']:
             candidate = root / f'{icon_name}{ext}'
             if candidate.exists():
                 return candidate
+        # case-insensitive fallback at root
+        name_lower = icon_name.lower()
+        for f in root.iterdir():
+            if f.suffix.lower() in ('.svg', '.png') and f.stem.lower() == name_lower:
+                return f
 
-        # 3. hicolor icon dirs
+        # 3. hicolor icon dirs (largest to smallest, prefer PNG over SVG)
         hicolor = root / 'usr' / 'share' / 'icons' / 'hicolor'
-        for size in ['scalable/apps', '512x512/apps', '256x256/apps', '128x128/apps']:
-            for ext in ['.svg', '.png']:
+        for size in ['scalable/apps', '512x512/apps', '256x256/apps',
+                     '128x128/apps', '64x64/apps', '48x48/apps']:
+            for ext in ['.png', '.svg']:
                 candidate = hicolor / size / f'{icon_name}{ext}'
                 if candidate.exists():
                     return candidate
+                # case-insensitive
+                size_dir = hicolor / size
+                if size_dir.exists():
+                    for f in size_dir.iterdir():
+                        if f.suffix.lower() == ext and f.stem.lower() == name_lower:
+                            return f
 
-        # 4. Any .png / .svg in root
+        # 4. usr/share/pixmaps/
+        pixmaps = root / 'usr' / 'share' / 'pixmaps'
+        if pixmaps.exists():
+            for ext in ['.png', '.svg']:
+                candidate = pixmaps / f'{icon_name}{ext}'
+                if candidate.exists():
+                    return candidate
+            for f in pixmaps.iterdir():
+                if f.suffix.lower() in ('.png', '.svg') and f.stem.lower() == name_lower:
+                    return f
+
+        # 5. Any .png then .svg anywhere under root (prefer larger name match)
         for ext in ['*.png', '*.svg']:
-            found = list(root.glob(ext))
-            if found:
-                return found[0]
+            candidates = list(root.rglob(ext))
+            if candidates:
+                # prefer files whose stem matches icon_name
+                for c in candidates:
+                    if c.stem.lower() == name_lower:
+                        return c
+                return candidates[0]
 
         return None
 
@@ -431,13 +889,15 @@ class AppImageManager:
         return entry
 
     def _write_desktop_file(self, desktop_path: Path, name: str, exec_path: Path,
-                             icon: str, comment: str, categories: str, version: str):
+                             icon: str, comment: str, categories: str, version: str,
+                             update_url: str = '', run_as_root: bool = False):
         """Write a .desktop file for an AppImage."""
+        exec_value = f'pkexec {exec_path}' if run_as_root else str(exec_path)
         lines = [
             '[Desktop Entry]',
             'Type=Application',
             f'Name={name}',
-            f'Exec={exec_path}',
+            f'Exec={exec_value}',
             f'TryExec={exec_path}',
             f'Icon={icon}',
             f'Categories={categories}',
@@ -446,6 +906,10 @@ class AppImageManager:
             lines.append(f'Comment={comment}')
         if version:
             lines.append(f'X-AppImage-Version={version}')
+        if update_url:
+            lines.append(f'X-AppImage-UpdateUrl={update_url}')
+        if run_as_root:
+            lines.append('X-AppImage-RunAsRoot=true')
         lines.append('X-AppImage-Integrate=true')
         lines.append('')
 

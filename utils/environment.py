@@ -15,6 +15,11 @@ class DesktopEnvironment(Enum):
     XFCE = "xfce"
     UNKNOWN = "unknown"
 
+class ThemeType(Enum):
+    """Theme variants."""
+    DARK = "dark"
+    LIGHT = "light"
+
 class DisplayProtocol(Enum):
     """Display server protocols."""
     X11 = "x11"
@@ -37,8 +42,42 @@ class EnvironmentDetector:
         
         return {
             'desktop_environment': self._desktop_env.value,
-            'display_protocol': self._display_protocol.value
+            'display_protocol': self._display_protocol.value,
+            'theme_type': self._detect_theme_type()
         }
+
+    def _detect_theme_type(self) -> str:
+        """Detect whether the current GTK theme is dark or light."""
+        # 1. Explicit override via env var
+        soplos_hint = os.environ.get('SOPLOS_THEME_TYPE', '').lower()
+        if soplos_hint in ('dark', 'light'):
+            return soplos_hint
+
+        # 2. Use Gtk.Settings — works on ALL DEs (GNOME, KDE, XFCE, etc.)
+        try:
+            import gi
+            gi.require_version('Gtk', '3.0')
+            from gi.repository import Gtk
+            settings = Gtk.Settings.get_default()
+            if settings:
+                prefer_dark = settings.get_property('gtk-application-prefer-dark-theme')
+                if prefer_dark:
+                    return ThemeType.DARK.value
+                theme_name = settings.get_property('gtk-theme-name') or ''
+                if 'dark' in theme_name.lower():
+                    return ThemeType.DARK.value
+                if theme_name:
+                    return ThemeType.LIGHT.value
+        except Exception:
+            pass
+
+        # 3. GTK_THEME env var fallback
+        gtk_theme = os.environ.get('GTK_THEME', '').lower()
+        if gtk_theme:
+            return ThemeType.DARK.value if 'dark' in gtk_theme else ThemeType.LIGHT.value
+
+        # 4. Default: dark
+        return ThemeType.DARK.value
     
     def _detect_desktop_environment(self) -> DesktopEnvironment:
         """Detects the current desktop environment."""
