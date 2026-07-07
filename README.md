@@ -1,7 +1,7 @@
 # Soplos AppImage Manager
 
 [![License: GPL-3.0+](https://img.shields.io/badge/License-GPL--3.0%2B-blue.svg)](https://www.gnu.org/licenses/gpl-3.0)
-[![Version](https://img.shields.io/badge/version-1.0.1-green.svg)]()
+[![Version](https://img.shields.io/badge/version-1.0.1--1-green.svg)]()
 
 AppImage integration manager for Soplos Linux.
 
@@ -80,6 +80,10 @@ soplos-appimage-manager/
 4. The icon is saved to `~/AppImages/.icons/`
 5. A `.desktop` file is written to `~/.local/share/applications/`
 6. The app appears in the application menu immediately
+
+## 🆕 New in version 1.0.1-1 (July 7, 2026)
+
+- **Build**: Build dependency `python3-all` replaced with `python3`.
 
 ## 🆕 New in version 1.0.1 (March 30, 2026)
 
