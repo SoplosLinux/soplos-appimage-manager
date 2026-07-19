@@ -4,6 +4,7 @@ import gi
 gi.require_version('Gtk', '3.0')
 from gi.repository import Gtk, GdkPixbuf, Gdk, Gio, GLib
 from pathlib import Path
+from typing import Optional
 
 from core.appimage_manager import AppImageManager, AppImage
 from config.constants import APP_ID, APP_NAME, APP_VERSION, APPIMAGES_DIR, DESKTOP_FILES_DIR
@@ -939,8 +940,36 @@ class MainWindow(Gtk.ApplicationWindow):
         for uri in uris:
             path = Path(Gio.File.new_for_uri(uri).get_path() or '')
             if path.suffix.lower() == '.appimage' and path.is_file():
-                self._do_add_appimage(path)
+                copy = self._ask_move_or_copy(path)
+                if copy is not None:
+                    self._do_add_appimage(path, copy=copy)
                 break  # handle one at a time
+
+    def _ask_move_or_copy(self, path: Path) -> Optional[bool]:
+        """Ask the user whether to move or copy the dropped AppImage.
+        Returns True for copy, False for move, None if cancelled."""
+        dialog = Gtk.MessageDialog(
+            transient_for=self, flags=0,
+            message_type=Gtk.MessageType.QUESTION,
+            buttons=Gtk.ButtonsType.NONE,
+            text=self._('Add {name}?').format(name=path.name),
+        )
+        dialog.format_secondary_text(
+            self._('Move it into ~/AppImages/, or keep the original file '
+                    'and copy it instead?'))
+        dialog.add_buttons(
+            self._('Cancel'), Gtk.ResponseType.CANCEL,
+            self._('Keep Original (Copy)'), Gtk.ResponseType.APPLY,
+            self._('Move'), Gtk.ResponseType.OK,
+        )
+        dialog.set_default_response(Gtk.ResponseType.OK)
+        response = dialog.run()
+        dialog.destroy()
+        if response == Gtk.ResponseType.OK:
+            return False
+        if response == Gtk.ResponseType.APPLY:
+            return True
+        return None
 
     def _on_add_clicked(self, _widget):
         dialog = Gtk.FileChooserDialog(
@@ -960,14 +989,19 @@ class MainWindow(Gtk.ApplicationWindow):
         filt.add_mime_type('application/vnd.appimage')
         dialog.add_filter(filt)
 
+        keep_original_check = Gtk.CheckButton(
+            label=self._('Keep the original file (copy instead of move)'))
+        dialog.set_extra_widget(keep_original_check)
+
         if dialog.run() == Gtk.ResponseType.OK:
             path = Path(dialog.get_filename())
+            copy = keep_original_check.get_active()
             dialog.destroy()
-            self._do_add_appimage(path)
+            self._do_add_appimage(path, copy=copy)
         else:
             dialog.destroy()
 
-    def _do_add_appimage(self, path: Path):
+    def _do_add_appimage(self, path: Path, copy: bool = False):
         # Show a progress dialog while extracting metadata
         progress = Gtk.MessageDialog(
             transient_for=self, flags=0,
@@ -982,7 +1016,7 @@ class MainWindow(Gtk.ApplicationWindow):
             Gtk.main_iteration()
 
         try:
-            self.appimage_manager.add_appimage(path)
+            self.appimage_manager.add_appimage(path, copy=copy)
             progress.destroy()
             self.load_appimages()
         except Exception as e:

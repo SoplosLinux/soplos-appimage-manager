@@ -1,7 +1,7 @@
 # Soplos AppImage Manager
 
 [![License: GPL-3.0+](https://img.shields.io/badge/License-GPL--3.0%2B-blue.svg)](https://www.gnu.org/licenses/gpl-3.0)
-[![Version](https://img.shields.io/badge/version-1.0.1--1-green.svg)]()
+[![Version](https://img.shields.io/badge/version-1.0.1--2-green.svg)]()
 
 AppImage integration manager for Soplos Linux.
 
@@ -26,7 +26,7 @@ Soplos AppImage Manager lets you easily integrate AppImage applications into you
 
 ## Features
 
-- **Add AppImages**: File chooser or drag & drop → moved to `~/AppImages/` automatically
+- **Add AppImages**: File chooser or drag & drop → moved to `~/AppImages/` automatically, with the option to copy instead of move and keep the original file
 - **Metadata extraction**: icon, name, version and description extracted from the AppImage itself
 - **Icon storage**: icons saved persistently to `~/AppImages/.icons/`
 - **Desktop integration**: `.desktop` file created in `~/.local/share/applications/`

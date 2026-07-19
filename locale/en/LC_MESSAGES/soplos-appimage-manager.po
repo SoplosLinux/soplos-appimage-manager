@@ -231,6 +231,29 @@ msgstr "Select an AppImage"
 msgid "AppImage files"
 msgstr "AppImage files"
 
+#: ui/main_window.py:964
+msgid "Keep the original file (copy instead of move)"
+msgstr "Keep the original file (copy instead of move)"
+
+#: ui/main_window.py:955
+#, python-brace-format
+msgid "Add {name}?"
+msgstr "Add {name}?"
+
+#: ui/main_window.py:958
+msgid ""
+"Move it into ~/AppImages/, or keep the original file and copy it instead?"
+msgstr ""
+"Move it into ~/AppImages/, or keep the original file and copy it instead?"
+
+#: ui/main_window.py:962
+msgid "Keep Original (Copy)"
+msgstr "Keep Original (Copy)"
+
+#: ui/main_window.py:963
+msgid "Move"
+msgstr "Move"
+
 #: ui/main_window.py:947
 msgid "Adding AppImage…"
 msgstr "Adding AppImage…"

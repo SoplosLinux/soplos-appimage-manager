@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-Soplos AppImage Manager 1.0.1-1 - AppImage Integration Manager
+Soplos AppImage Manager 1.0.1-2 - AppImage Integration Manager
 Main application entry point.
 """
 

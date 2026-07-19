@@ -112,10 +112,10 @@ class AppImageManager:
 
         return result
 
-    def add_appimage(self, source_path: Path) -> AppImage:
+    def add_appimage(self, source_path: Path, copy: bool = False) -> AppImage:
         """
-        Move AppImage to ~/AppImages/, extract metadata and create .desktop file.
-        Returns the new AppImage object.
+        Move (or copy, if copy=True) AppImage to ~/AppImages/, extract metadata
+        and create .desktop file. Returns the new AppImage object.
         """
         source_path = Path(source_path)
         dest_path = APPIMAGES_DIR / source_path.name
@@ -128,7 +128,10 @@ class AppImageManager:
                 dest_path = APPIMAGES_DIR / f'{stem}_{i}{suffix}'
                 i += 1
 
-        shutil.move(str(source_path), str(dest_path))
+        if copy:
+            shutil.copy2(str(source_path), str(dest_path))
+        else:
+            shutil.move(str(source_path), str(dest_path))
         dest_path.chmod(0o755)
 
         # Determine app_id from filename first (used for icon naming)
